@@ -137,6 +137,12 @@ The `get-user-state` tool accepts a `userId` UUID and calls
 state change reason and date in `structuredContent.entity` and requires
 `directory:userStateChange:view` permission. It has no paging or expansion options.
 
+Page-number listings aggregate all pages into `structuredContent.entities`;
+cursor-based endpoints return the SDK page in `structuredContent.entity` so the
+response cursor can be used in a later call. Inputs use the published enum values
+where the Swagger schema defines them. This convention applies to every domain
+below, not only Users.
+
 The following tools expose the remaining GET operations on the installed SDK
 `UsersApi`. `*` marks a required input. Tools include the documented OAuth
 scopes and explicit Genesys permissions in their descriptions. `—` means the
@@ -198,10 +204,96 @@ Swagger operation does not declare a specific permission requirement.
 | `get-users-search`                                      | `q64*`, `expand?`, `integrationPresenceSource?`                                                                                                                     | `entity`               | `directory:user:view`                                      |
 | `get-users-stations-me`                                 | —                                                                                                                                                                   | `entity`               | `telephony:selfStationAssociation:view`                    |
 
-Page-number listings aggregate all pages into `structuredContent.entities`;
-cursor-based endpoints return the SDK page in `structuredContent.entity` so the
-response cursor can be used in a later call. Inputs use the published enum values
-where the Swagger schema defines them.
+### Presence
+
+GET operations on the installed SDK `PresenceApi` (13 tools, full coverage).
+
+| Tool                                 | Inputs                                                | `structuredContent`    | Permission(s)                                                                  |
+| ------------------------------------ | ----------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------ |
+| `get-presence-definition`            | `definitionId*`, `localeCode?`                        | `entity`               | `presence:presenceDefinition:view`                                             |
+| `get-presence-definitions`           | `deactivated?`, `divisionId[]?`, `localeCode?`        | `entity`               | `presence:presenceDefinition:view`                                             |
+| `get-presence-settings`              | —                                                     | `entity`               | `presence:settings:view`                                                       |
+| `get-presence-source`                | `sourceId*`                                           | `entity`               | `presence:source:view`                                                         |
+| `get-presence-sources`               | `deactivated?`                                        | `entity`               | `presence:source:view`                                                         |
+| `get-presence-user-primarysource`    | `userId*`                                             | `entity`               | `presence:userPrimarySource:view`                                              |
+| `get-presencedefinition`             | `presenceId*`, `localeCode?`                          | `entity`               | `presence:presenceDefinition:view` (deprecated; use `get-presence-definition`) |
+| `get-presencedefinitions`            | `deleted?`, `localeCode?`, `pageNumber?`, `pageSize?` | `entities` (all pages) | — (deprecated; use `get-presence-definitions`)                                 |
+| `get-systempresences`                | —                                                     | `entities`             | —                                                                              |
+| `get-user-presence`                  | `userId*`, `sourceId*`                                | `entity`               | —                                                                              |
+| `get-user-presences-purecloud`       | `userId*`                                             | `entity`               | —                                                                              |
+| `get-users-presence-bulk`            | `sourceId*`, `id[]?` (max 50)                         | `entities`             | —                                                                              |
+| `get-users-presences-purecloud-bulk` | `id[]?` (max 50)                                      | `entities`             | —                                                                              |
+
+### Organization
+
+GET operations on the installed SDK `OrganizationApi` (13 tools, full coverage).
+`get-organization-fieldconfig` is renamed from the SDK's `getFieldconfig` to avoid
+colliding with the Users domain's `get-fieldconfig`, which hits the same endpoint.
+
+| Tool                                          | Inputs                                                 | `structuredContent`                   | Permission(s)                               |
+| --------------------------------------------- | ------------------------------------------------------ | ------------------------------------- | ------------------------------------------- |
+| `get-organization-fieldconfig`                | `type*` (`person`, `group`, or `org`)                  | `entity`                              | —                                           |
+| `get-organizations-authentication-settings`   | —                                                      | `entity`                              | `directory:organization:admin`              |
+| `get-organizations-embeddedintegration`       | —                                                      | `entity`                              | — (deprecated)                              |
+| `get-organizations-ipaddressauthentication`   | —                                                      | `entity`                              | `directory:organization:admin` (deprecated) |
+| `get-organizations-limits-changerequest`      | `requestId*`                                           | `entity`                              | `limits:organization:view`                  |
+| `get-organizations-limits-changerequests`     | `after?`, `before?`, `status?`, `pageSize?`, `expand?` | `entity` (single page, use `nextUri`) | `limits:organization:view`                  |
+| `get-organizations-limits-docs`               | —                                                      | `entity`                              | —                                           |
+| `get-organizations-limits-docs-freetrial`     | —                                                      | `entity`                              | —                                           |
+| `get-organizations-limits-namespace`          | `namespaceName*`                                       | `entities`                            | —                                           |
+| `get-organizations-limits-namespace-defaults` | `namespaceName*`                                       | `entities`                            | —                                           |
+| `get-organizations-limits-namespaces`         | `pageSize?`, `pageNumber?`                             | `entities` (all pages)                | —                                           |
+| `get-organizations-me`                        | —                                                      | `entity`                              | —                                           |
+| `get-organizations-whitelist`                 | —                                                      | `entity`                              | — (deprecated)                              |
+
+### Objects (authorization divisions)
+
+GET operations on the installed SDK `ObjectsApi` (6 tools, full coverage).
+
+| Tool                                  | Inputs                                                 | `structuredContent`                                           | Permission(s)                        |
+| ------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------- | ------------------------------------ |
+| `get-authorization-division`          | `divisionId*`, `objectCount?`                          | `entity`                                                      | —                                    |
+| `get-authorization-divisions`         | `sortBy?`, `expand?`, `objectCount?`, `id[]?`, `name?` | `entities` (all pages)                                        | —                                    |
+| `get-authorization-divisions-deleted` | —                                                      | `entities` (all pages)                                        | `authorization:divisionDeleted:view` |
+| `get-authorization-divisions-home`    | —                                                      | `entity`                                                      | —                                    |
+| `get-authorization-divisions-limit`   | —                                                      | `limit` (number)                                              | —                                    |
+| `get-authorization-divisions-query`   | `before?`, `after?`, `pageSize?`, `id[]?`, `name?`     | `entities`, `nextUri`, `previousUri`, `selfUri` (single page) | —                                    |
+
+### License
+
+GET operations on the installed SDK `LicenseApi` (5 tools, full coverage).
+
+| Tool                      | Inputs         | `structuredContent`    | Permission(s)                                             |
+| ------------------------- | -------------- | ---------------------- | --------------------------------------------------------- |
+| `get-license-definition`  | `licenseId*`   | `entity`               | `authorization:grant:add` or `authorization:license:view` |
+| `get-license-definitions` | —              | `entities`             | `authorization:grant:add` or `authorization:license:view` |
+| `get-license-toggle`      | `featureName*` | `entity`               | — (deprecated; always returns `true`)                     |
+| `get-license-user`        | `userId*`      | `entity`               | `authorization:grant:add` or `authorization:license:view` |
+| `get-license-users`       | —              | `entities` (all pages) | —                                                         |
+
+### Groups
+
+GET operations on the installed SDK `GroupsApi` (9 tools, full coverage).
+`get-group-fieldconfig` is renamed from the SDK's `getFieldconfig` to avoid
+colliding with the Users and Organization domains' field-config tools.
+
+| Tool                        | Inputs                                                           | `structuredContent`    | Permission(s)                                       |
+| --------------------------- | ---------------------------------------------------------------- | ---------------------- | --------------------------------------------------- |
+| `get-groups`                | `pageSize?`, `pageNumber?`, `id[]?`, `jabberId[]?`, `sortOrder?` | `entities` (all pages) | —                                                   |
+| `get-group`                 | `groupId*`                                                       | `entity`               | —                                                   |
+| `get-group-dynamicsettings` | `groupId*`                                                       | `entity`               | — (undocumented preview SDK method; see note below) |
+| `get-group-individuals`     | `groupId*`                                                       | `entities`             | —                                                   |
+| `get-group-members`         | `groupId*`, `pageSize?`, `pageNumber?`, `sortOrder?`, `expand?`  | `entities` (all pages) | —                                                   |
+| `get-group-profile`         | `groupId*`, `fields?`                                            | `entity`               | — (deprecated; use `get-group`/`get-groups`)        |
+| `get-groups-search`         | `q64*`, `expand?`                                                | `entity`               | —                                                   |
+| `get-group-fieldconfig`     | `type*` (`person`, `group`, or `org`)                            | `entity`               | — (deprecated)                                      |
+| `get-profiles-groups`       | `pageSize?`, `pageNumber?`, `id[]?`, `jabberId[]?`, `sortOrder?` | `entities` (all pages) | — (deprecated; use `get-groups`)                    |
+
+`get-group-dynamicsettings` (`GroupsApi.getGroupDynamicsettings`) has no
+corresponding Swagger operation; it is implemented directly from the installed
+SDK, which marks it a preview method "subject to both breaking and non-breaking
+changes at any time without notice." Its OAuth scopes are inferred from sibling
+Groups endpoints, not confirmed by Swagger.
 
 When running the compiled server, run `npm run build` after source changes,
 restart the server, and reconnect the MCP client to refresh its tool list.
@@ -226,3 +318,7 @@ dependencies, the lockfile, and environment files are excluded.
 
 Tests mock OAuth, the credential store, and browser launch, and exercise both MCP
 transports locally; they do not require real credentials or contact Genesys Cloud.
+
+## Running locally
+
+node --watch --env-file-if-exists=.env src/index.ts --transport=http

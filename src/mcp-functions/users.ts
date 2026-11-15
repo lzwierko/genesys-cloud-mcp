@@ -1,9 +1,12 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import type { ToolCallback } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { getGenesysClient } from '../genesys.ts';
 import platformClient from 'purecloud-platform-client-v2';
-import { getPagedResponse } from './genesys-common.ts';
+import {
+  createExpandEnumSchema,
+  getPagedResponse,
+  option,
+  registerApiGetTool,
+} from './genesys-common.ts';
 import { z } from 'zod';
 
 type UsersApi = InstanceType<typeof platformClient.UsersApi>;
@@ -47,44 +50,9 @@ const profileExpandValues = [
   'authorization',
 ] as const;
 
-function createExpandEnumSchema<const T extends readonly [string, ...string[]]>(
-  values: T,
-  description: string,
-) {
-  return z.array(z.enum(values)).optional().describe(description);
-}
-
-function option<K extends string, V>(key: K, value: V | undefined): Partial<Record<K, V>> {
-  const result: Partial<Record<K, V>> = {};
-  if (value !== undefined) result[key] = value;
-  return result;
-}
-
-const genesysErrorBodySchema = z.object({
-  status: z.number().optional(),
-  code: z.string().optional(),
-  message: z.string().optional(),
-  contextId: z.string().optional(),
-});
-
-// The SDK rejects with the parsed Genesys Cloud ErrorBody (status/code/message/contextId) when the
-// API responds with an error, or with the underlying HTTP/network error otherwise. Both are safe to
-// log: they never contain the OAuth token, since the SDK only attaches it to the request headers.
-function describeGenesysError(error: unknown): string {
-  const body = genesysErrorBodySchema.safeParse(error);
-  if (body.success && (body.data.status ?? body.data.code ?? body.data.message)) {
-    const { status, code, message, contextId } = body.data;
-    return [
-      status !== undefined ? `HTTP ${status}` : '',
-      code,
-      message,
-      contextId ? `(contextId: ${contextId})` : '',
-    ]
-      .filter(Boolean)
-      .join(' - ');
-  }
-  if (error instanceof Error) return error.message;
-  return String(error);
+async function getUsersApi() {
+  const client = await getGenesysClient();
+  return new platformClient.UsersApi(client);
 }
 
 function registerUsersGetTool<S extends z.ZodType>(
@@ -96,51 +64,21 @@ function registerUsersGetTool<S extends z.ZodType>(
   permissions: string[],
   inputSchema: S,
   execute: (api: UsersApi, input: z.output<S>) => Promise<Record<string, unknown>>,
-  toolName = methodName.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`),
+  toolName?: string,
 ) {
-  const requirements = [
-    scopes.length ? `OAuth scopes: ${scopes.join(', ')}.` : '',
-    permissions.length
-      ? permissions.length > 1
-        ? `Requires at least one of these permissions: ${permissions.join(', ')}.`
-        : `Requires permission: ${permissions[0]}.`
-      : '',
-  ]
-    .filter(Boolean)
-    .join(' ');
-
-  const handler = async (input: z.output<S>): Promise<CallToolResult> => {
-    try {
-      return {
-        content: [],
-        structuredContent: await execute(await getUsersApi(), input),
-      };
-    } catch (error) {
-      const subject = title.replace(/^Get /, '').toLowerCase();
-      const message = `Failed to retrieve Genesys Cloud ${subject}.`;
-      console.error(`${message} UsersApi.${methodName}: ${describeGenesysError(error)}`);
-      return {
-        isError: true,
-        content: [{ type: 'text', text: message }],
-      };
-    }
-  };
-
-  server.registerTool(
+  registerApiGetTool(
+    server,
+    'UsersApi',
+    getUsersApi,
+    methodName,
+    title,
+    summary,
+    scopes,
+    permissions,
+    inputSchema,
+    execute,
     toolName,
-    {
-      title,
-      description: `${summary} Returns the SDK response as structured JSON. ${requirements}`.trim(),
-      inputSchema,
-    },
-    // Keep the concrete Zod input type above; the MCP callback generic is conditional and loses it here.
-    handler as ToolCallback<S>,
   );
-}
-
-async function getUsersApi() {
-  const client = await getGenesysClient();
-  return new platformClient.UsersApi(client);
 }
 
 function registerFunctions(server: McpServer) {

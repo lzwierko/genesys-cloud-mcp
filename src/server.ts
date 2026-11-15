@@ -3,6 +3,11 @@ import type { GenesysConfig } from './config.ts';
 import { initializeGenesysClient } from './genesys.ts';
 import { gcUsersRegisterFunctions } from './mcp-functions/users.ts';
 import { gcLoginRegisterFunctions } from './mcp-functions/login.ts';
+import { gcPresenceRegisterFunctions } from './mcp-functions/presence.ts';
+import { gcOrganizationRegisterFunctions } from './mcp-functions/organization.ts';
+import { gcObjectsRegisterFunctions } from './mcp-functions/objects.ts';
+import { gcLicenseRegisterFunctions } from './mcp-functions/license.ts';
+import { gcGroupsRegisterFunctions } from './mcp-functions/groups.ts';
 
 export function createServer(genesysConfig: GenesysConfig): McpServer {
   const server = new McpServer(
@@ -23,5 +28,10 @@ export function createServer(genesysConfig: GenesysConfig): McpServer {
 
   gcLoginRegisterFunctions(server, genesysConfig);
   gcUsersRegisterFunctions(server);
+  gcPresenceRegisterFunctions(server);
+  gcOrganizationRegisterFunctions(server);
+  gcObjectsRegisterFunctions(server);
+  gcLicenseRegisterFunctions(server);
+  gcGroupsRegisterFunctions(server);
   return server;
 }
