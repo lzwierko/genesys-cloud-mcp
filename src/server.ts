@@ -1,7 +1,8 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { GenesysConfig } from './config.ts';
 import { initializeGenesysClient } from './genesys.ts';
-import { registerFunctions } from './mcp-functions/users.ts';
+import { gcUsersRegisterFunctions } from './mcp-functions/users.ts';
+import { gcLoginRegisterFunctions } from './mcp-functions/login.ts';
 
 export function createServer(genesysConfig: GenesysConfig): McpServer {
   const server = new McpServer(
@@ -20,35 +21,7 @@ export function createServer(genesysConfig: GenesysConfig): McpServer {
     }),
   );
 
-  server.registerTool(
-    'verify_login',
-    {
-      description: 'Verify Genesys Cloud login using the configured OAuth client credentials.',
-      inputSchema: {},
-    },
-    async () => {
-      try {
-        await initializeGenesysClient(genesysConfig);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Genesys Cloud login verified successfully.',
-            },
-          ],
-        };
-      } catch {
-        const message =
-          'Genesys Cloud login verification failed. Check the region and OAuth client credentials.';
-        console.error(message);
-        return {
-          isError: true,
-          content: [{ type: 'text', text: message }],
-        };
-      }
-    },
-  );
-
-  registerFunctions(server);
+  gcLoginRegisterFunctions(server, genesysConfig);
+  gcUsersRegisterFunctions(server);
   return server;
 }

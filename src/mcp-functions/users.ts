@@ -18,7 +18,7 @@ function createExpandParamSchema() {
     );
 }
 
-export function registerFunctions(server: McpServer) {
+function registerFunctions(server: McpServer) {
   server.registerTool(
     'get-users',
     {
@@ -81,4 +81,32 @@ export function registerFunctions(server: McpServer) {
       }
     },
   );
+
+  server.registerTool(
+    'get-user-me',
+    {
+      title: 'Get Current User',
+      description: 'Return the currently authenticated Genesys Cloud user as structured JSON.',
+      inputSchema: {},
+    },
+    async ({}) => {
+      try {
+        const usersApi = await getUsersApi();
+        const user = await usersApi.getUsersMe();
+        return {
+          content: [],
+          structuredContent: { entity: user },
+        };
+      } catch {
+        const message = 'Failed to retrieve current Genesys Cloud user.';
+        console.error(message);
+        return {
+          isError: true,
+          content: [{ type: 'text', text: message }],
+        };
+      }
+    },
+  );
 }
+
+export { registerFunctions as gcUsersRegisterFunctions };

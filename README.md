@@ -18,12 +18,31 @@ Set these variables in `.env` or the process environment:
 | --------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | `GENESYSCLOUD_REGION`             | Genesys Cloud hostname (e.g. `mypurecloud.com`, `mypurecloud.ie`) or SDK region key (e.g. `eu_west_1`). |
 | `GENESYSCLOUD_OAUTHCLIENT_ID`     | OAuth client ID.                                                                                        |
-| `GENESYSCLOUD_OAUTHCLIENT_SECRET` | OAuth client secret.                                                                                    |
+| `GENESYSCLOUD_OAUTHCLIENT_SECRET` | OAuth client secret; leave empty or unset for browser sign-in.                                          |
+| `GENESYSCLOUD_REDIRECT_URI`       | Browser login callback; defaults to `http://localhost:6798/`.                                           |
 
-Use a Genesys Cloud OAuth client configured for the **Client Credentials** grant,
-with the roles needed by the APIs you intend to expose. The SDK client is
-authenticated before either transport starts. Missing configuration or failed
-authentication stops startup; secrets and tokens are not logged.
+With a secret, use a Genesys Cloud OAuth client configured for **Client Credentials**
+with the roles needed by the APIs you intend to expose.
+
+Without a secret, use a Genesys Cloud OAuth client configured for **Authorization
+Code with PKCE**. Register `http://localhost:6798/` as an authorized redirect URI,
+or set `GENESYSCLOUD_REDIRECT_URI` to the exact registered loopback HTTP URL with
+an explicit port. Start the server on the machine where the browser and callback
+are accessible; complete the browser login before the MCP client connects.
+
+Browser tokens are saved in the current user's OS credential store under
+`genesys-cloud-mcp`: Windows Credential Manager, macOS Keychain, or Linux Secret
+Service (which must be available and unlocked). The cache is separate for each
+region and client ID. A saved access token is checked against `/api/v2/users/me`;
+when necessary, a saved refresh token is used, or a new browser login is requested.
+Expired tokens are refreshed before subsequent Genesys tool calls. Remove the
+corresponding credential from your OS credential manager to sign out locally.
+Anyone with access to your user account or credential store may be able to use
+the cached credentials.
+
+Both authentication methods work with stdio and HTTP. Authentication happens
+before either transport starts; failure stops startup. Tokens and secrets are
+not printed or returned by MCP tools.
 
 ## Transports
 
@@ -79,20 +98,28 @@ For HTTP clients, configure a Streamable HTTP server URL of
 
 The `ping` tool takes no arguments and returns a text content block containing
 `pong`. It checks MCP connectivity, not Genesys API availability, and works over
-both transports. Server startup still requires valid Genesys credentials.
+both transports. Server startup still requires successful Genesys authentication.
 
 In MCP Inspector, connect, select **List Tools**, then call `ping` with `{}`.
 
-The `verify_login` tool takes no arguments and performs a fresh Client Credentials
-login using the server's configured Genesys credentials. A successful OAuth grant
+The `verify_login` tool takes no arguments and verifies the configured authentication.
+It performs a fresh Client Credentials login when a secret is configured; browser
+authentication validates and reuses a saved token, refreshing or signing in if needed. A successful login
 returns `Genesys Cloud login verified successfully.`; failure returns an MCP tool
 error (`isError: true`) with a safe message. No credentials or access tokens are
 returned or logged. This verifies authentication, not permission for every API.
 It works over both transports and uses the same SDK client as server startup.
 
 In MCP Inspector, select **List Tools**, then call `verify_login` with `{}`.
-Startup authentication is unchanged: invalid initial credentials prevent the
-server from starting, so the tool is available only after startup succeeds.
+Invalid initial credentials prevent the server from starting, so the tool is
+available only after startup succeeds.
+
+The `invalidate_login` tool takes no arguments and clears the SDK login and saved
+access/refresh tokens for the configured region and client ID. It works over both
+transports and leaves MCP running. Call `verify_login` to authenticate again.
+It does not delete configured client IDs/secrets, revoke tokens remotely, sign out
+browser cookies, or affect other running server processes. If credential deletion
+fails, the tool returns `isError: true`; the local login remains cleared.
 
 The `get-users` tool returns users from all pages as an `entities` array in MCP
 `structuredContent`. It requires the appropriate Genesys Cloud permissions.
@@ -121,5 +148,5 @@ as a CI check. Formatting uses two-space indentation, single quotes in TypeScrip
 trailing commas, a 100-character print width, and LF line endings. Generated files,
 dependencies, the lockfile, and environment files are excluded.
 
-Tests mock OAuth authentication and exercise both MCP transports locally;
-they do not require real credentials or contact Genesys Cloud.
+Tests mock OAuth, the credential store, and browser launch, and exercise both MCP
+transports locally; they do not require real credentials or contact Genesys Cloud.

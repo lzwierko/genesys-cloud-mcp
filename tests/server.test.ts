@@ -27,9 +27,34 @@ test('configuration accepts env and CLI transport selection and SDK region keys'
 });
 
 test('configuration rejects missing credentials, unresolved placeholders and invalid settings', () => {
-  for (const key of Object.keys(env)) {
+  for (const key of ['GENESYSCLOUD_REGION', 'GENESYSCLOUD_OAUTHCLIENT_ID']) {
     assert.throws(() => readConfig({ ...env, [key]: '' }, []), new RegExp(key));
     assert.throws(() => readConfig({ ...env, [key]: `\${${key}}` }, []), new RegExp(key));
+  }
+  assert.throws(() => readConfig({ ...env, GENESYSCLOUD_OAUTHCLIENT_SECRET: '${SECRET}' }, []));
+  assert.equal(
+    readConfig({ ...env, GENESYSCLOUD_OAUTHCLIENT_SECRET: '' }, []).genesys.clientSecret,
+    '',
+  );
+  assert.equal(
+    readConfig({ ...env, GENESYSCLOUD_OAUTHCLIENT_SECRET: undefined }, []).genesys.clientSecret,
+    '',
+  );
+  for (const redirect of [
+    'https://localhost:6798/',
+    'http://example.com:6798/',
+    'http://localhost:0/',
+    'http://localhost:6798/?x=1',
+    'http://localhost/',
+  ]) {
+    assert.throws(
+      () =>
+        readConfig(
+          { ...env, GENESYSCLOUD_OAUTHCLIENT_SECRET: '', GENESYSCLOUD_REDIRECT_URI: redirect },
+          [],
+        ),
+      /GENESYSCLOUD_REDIRECT_URI/,
+    );
   }
   assert.throws(() => readConfig({ ...env, GENESYSCLOUD_REGION: 'untrusted.example' }, []));
   assert.throws(() => readConfig(env, ['--transport=invalid']));
@@ -89,7 +114,7 @@ test('HTTP supports ping, verifies login, reports safe authentication errors and
   assert.equal(client.getServerVersion()?.name, 'genesys-cloud-mcp');
   assert.deepEqual(
     (await client.listTools()).tools.map((tool) => tool.name),
-    ['ping', 'verify_login', 'get-users', 'get-user-by-id'],
+    ['ping', 'verify_login', 'invalidate_login', 'get-users', 'get-user-by-id', 'get-user-me'],
   );
   const result = await client.callTool({ name: 'ping', arguments: {} });
   assert.deepEqual(result.content, [{ type: 'text', text: 'pong' }]);
@@ -106,10 +131,12 @@ test('HTTP supports ping, verifies login, reports safe authentication errors and
   const log = t.mock.method(console, 'error', () => {});
   const failed = await client.callTool({ name: 'verify_login', arguments: {} });
   const message =
-    'Genesys Cloud login verification failed. Check the region and OAuth client credentials.';
+    'Genesys Cloud login verification failed. Check the server logs and authentication configuration.';
   assert.equal(failed.isError, true);
   assert.deepEqual(failed.content, [{ type: 'text', text: message }]);
-  assert.deepEqual(log.mock.calls[0]?.arguments, [message]);
+  assert.deepEqual(log.mock.calls[0]?.arguments, [
+    'Genesys Cloud authentication failed. Check the region and OAuth client credentials.',
+  ]);
   const response = await fetch(url);
   assert.equal(response.status, 405);
   assert.equal(response.headers.get('allow'), 'POST');
@@ -135,7 +162,7 @@ test('stdio supports MCP initialization, ping and login verification', async (t)
   assert.equal(client.getServerVersion()?.name, 'genesys-cloud-mcp');
   assert.deepEqual(
     (await client.listTools()).tools.map((tool) => tool.name),
-    ['ping', 'verify_login', 'get-users', 'get-user-by-id'],
+    ['ping', 'verify_login', 'invalidate_login', 'get-users', 'get-user-by-id', 'get-user-me'],
   );
   const result = await client.callTool({ name: 'ping' });
   assert.deepEqual(result.content, [{ type: 'text', text: 'pong' }]);

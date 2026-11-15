@@ -4,6 +4,7 @@ export interface GenesysConfig {
   region: string;
   clientId: string;
   clientSecret: string;
+  redirectUri?: string;
 }
 
 export interface Config {
@@ -52,11 +53,40 @@ export function readConfig(
     throw new Error('MCP_HOST must not be empty.');
   }
 
+  const clientSecret = env.GENESYSCLOUD_OAUTHCLIENT_SECRET?.trim() ?? '';
+  if (/^\$\{.*\}$/.test(clientSecret)) {
+    throw new Error('GENESYSCLOUD_OAUTHCLIENT_SECRET contains an unresolved placeholder.');
+  }
+  const redirectUri = env.GENESYSCLOUD_REDIRECT_URI?.trim() || 'http://localhost:6798/';
+  if (!clientSecret) {
+    let uri: URL;
+    try {
+      uri = new URL(redirectUri);
+    } catch {
+      throw new Error('GENESYSCLOUD_REDIRECT_URI must be a valid loopback HTTP URL.');
+    }
+    if (
+      uri.protocol !== 'http:' ||
+      !['localhost', '127.0.0.1', '[::1]'].includes(uri.hostname) ||
+      !uri.port ||
+      Number(uri.port) === 0 ||
+      uri.username ||
+      uri.password ||
+      uri.search ||
+      uri.hash
+    ) {
+      throw new Error(
+        'GENESYSCLOUD_REDIRECT_URI must be a loopback HTTP URL with a port and no query or fragment.',
+      );
+    }
+  }
+
   return {
     genesys: {
       region,
       clientId: required(env, 'GENESYSCLOUD_OAUTHCLIENT_ID'),
-      clientSecret: required(env, 'GENESYSCLOUD_OAUTHCLIENT_SECRET'),
+      clientSecret,
+      redirectUri,
     },
     transport,
     host,
