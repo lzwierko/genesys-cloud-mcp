@@ -295,6 +295,55 @@ SDK, which marks it a preview method "subject to both breaking and non-breaking
 changes at any time without notice." Its OAuth scopes are inferred from sibling
 Groups endpoints, not confirmed by Swagger.
 
+### External Contacts
+
+GET operations on the installed SDK `ExternalContactsApi` (65 tools). All share
+the OAuth scopes `external-contacts`/`external-contacts:readonly`. Tool names
+follow the SDK method name (e.g. `getExternalcontactsContact` ->
+`get-externalcontacts-contact`); call `listTools` for the authoritative set,
+since documenting 65 individual input shapes here is impractical to keep in
+sync. Grouped by sub-area:
+
+- **Contacts**: `get-externalcontacts-contact(-identifiers|-journey-segments|
+-journey-sessions|-note|-notes|-unresolved)`, `get-externalcontacts-contacts`
+  (all pages), `get-externalcontacts-contacts-export(s)`.
+- **Contact schemas**: `get-externalcontacts-contacts-schema(-version|-versions)`,
+  `get-externalcontacts-contacts-schemas(-coretype|-coretypes|-limits)`.
+- **Organizations**: `get-externalcontacts-organization(-contacts|-identifiers|
+-note|-notes|-relationships)`, `get-externalcontacts-organizations` (all
+  pages), `get-externalcontacts-organizations-export(s)`,
+  `get-externalcontacts-organizations-schema*` (same shape as contact schemas).
+- **Relationships**: `get-externalcontacts-relationship`,
+  `get-externalcontacts-relationships-export(s)`.
+- **Notes exports**: `get-externalcontacts-notes-export(s)`.
+- **Deduplication/graphs**: `get-externalcontacts-graphs-settings`,
+  `get-externalcontacts-graphs-clusterscan(s)(-latest)`,
+  `get-externalcontacts-graphs-clusterscan-cluster(s)`,
+  `get-externalcontacts-graphs-clusterscan(s)-latest-statistics`.
+- **Imports**: `get-externalcontacts-import-job(s)`,
+  `get-externalcontacts-import-setting(s)`,
+  `get-externalcontacts-import-csv-setting(s)`,
+  `get-externalcontacts-import-csv-upload-details|preview`.
+- **Scans/division views**: `get-externalcontacts-scan-contacts(-divisionviews-all)`,
+  `get-externalcontacts-scan-notes(-divisionviews-all)`,
+  `get-externalcontacts-scan-organizations(-divisionviews-all)`,
+  `get-externalcontacts-scan-relationships(-divisionviews-all)`.
+- **Other**: `get-externalcontacts-externalsource(s)`,
+  `get-externalcontacts-reversewhitepageslookup`.
+
+Pagination varies by endpoint: page-number listings (`contacts`, `organizations`,
+and their notes/relationships) aggregate all pages into `structuredContent.entities`;
+export/import/scan/graph endpoints return a single SDK page as `structuredContent.entity`
+(use its `nextUri`/`cursors` for more). The 4 `*-export(s)` tool families (Contacts,
+Organizations, Relationships, Notes) require **all** of their listed permissions,
+not just one, per Swagger's `"type": "ALL"`.
+
+Two Swagger/SDK gaps were found and are not implemented: `GET /api/v2/externalcontacts/settings`
+has no corresponding SDK method, so it was skipped rather than bypassed with a raw
+HTTP call; and `get-externalcontacts-contact-journey-segments` omits Swagger's
+documented `expand`/`segmentIds` filters because the installed SDK's options type
+doesn't expose them.
+
 When running the compiled server, run `npm run build` after source changes,
 restart the server, and reconnect the MCP client to refresh its tool list.
 

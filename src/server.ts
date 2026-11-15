@@ -8,6 +8,7 @@ import { gcOrganizationRegisterFunctions } from './mcp-functions/organization.ts
 import { gcObjectsRegisterFunctions } from './mcp-functions/objects.ts';
 import { gcLicenseRegisterFunctions } from './mcp-functions/license.ts';
 import { gcGroupsRegisterFunctions } from './mcp-functions/groups.ts';
+import { gcExternalContactsRegisterFunctions } from './mcp-functions/external-contacts.ts';
 
 export function createServer(genesysConfig: GenesysConfig): McpServer {
   const server = new McpServer(
@@ -33,5 +34,6 @@ export function createServer(genesysConfig: GenesysConfig): McpServer {
   gcObjectsRegisterFunctions(server);
   gcLicenseRegisterFunctions(server);
   gcGroupsRegisterFunctions(server);
+  gcExternalContactsRegisterFunctions(server);
   return server;
 }
