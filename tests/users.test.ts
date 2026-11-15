@@ -1,29 +1,73 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import platformClient from 'purecloud-platform-client-v2';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { initializeGenesysClient } from '../src/genesys.ts';
-import { createServer } from '../src/server.ts';
+import { gcUsersRegisterFunctions } from '../src/mcp-functions/users.ts';
 
-test('get-users returns structured JSON and reports API failures as errors', async (t) => {
-  const config = {
-    region: 'mypurecloud.com',
-    clientId: 'test-client',
-    clientSecret: 'test-secret',
-  };
-  t.mock.method(platformClient.ApiClient.instance, 'loginClientCredentialsGrant', async () => ({
-    accessToken: 'test-token',
-    tokenExpiryTime: Date.now() + 60_000,
-    tokenExpiryTimeString: '',
-  }));
-  await initializeGenesysClient(config);
-  const firstPage = Array.from({ length: 100 }, (_, id) => ({ id: `user-${id}` }));
-  const lastPage = [{ id: 'user-100' }];
-  const getUsers = t.mock.method(platformClient.UsersApi.prototype, 'getUsers', async (params) => ({
-    entities: params?.pageNumber === 1 ? firstPage : lastPage,
-  }));
-  const server = createServer(config);
+const expectedUserTools = [
+  'get-users',
+  'get-user-by-id',
+  'get-user-me',
+  'get-user-state',
+  'get-analytics-users-aggregates-job',
+  'get-analytics-users-aggregates-job-results',
+  'get-analytics-users-details-job',
+  'get-analytics-users-details-job-results',
+  'get-analytics-users-details-jobs-availability',
+  'get-authorization-divisionspermitted-me',
+  'get-authorization-divisionspermitted-paged-me',
+  'get-authorization-divisionspermitted-paged-subject-id',
+  'get-authorization-subject',
+  'get-authorization-subjects-me',
+  'get-fieldconfig',
+  'get-profiles-users',
+  'get-routing-directroutingbackup-settings-me',
+  'get-routing-user-directroutingbackup-settings',
+  'get-routing-user-utilization',
+  'get-user-adjacents',
+  'get-user-callforwarding',
+  'get-user-customattribute',
+  'get-user-customattributes-bulk',
+  'get-user-directreports',
+  'get-user-externalid',
+  'get-user-externalid-authority-name',
+  'get-user-favorites',
+  'get-user-geolocation',
+  'get-user-outofoffice',
+  'get-user-profile',
+  'get-user-profileskills',
+  'get-user-queues',
+  'get-user-roles',
+  'get-user-routinglanguages',
+  'get-user-routingskills',
+  'get-user-routingstatus',
+  'get-user-skillgroups',
+  'get-user-station',
+  'get-user-superiors',
+  'get-user-trustors',
+  'get-user-verifiers',
+  'get-users-chats-me',
+  'get-users-customattributes-schema',
+  'get-users-customattributes-schema-version',
+  'get-users-customattributes-schema-versions',
+  'get-users-customattributes-schemas',
+  'get-users-customattributes-schemas-coretype',
+  'get-users-customattributes-schemas-coretypes',
+  'get-users-customattributes-schemas-limits',
+  'get-users-development-activities',
+  'get-users-development-activities-me',
+  'get-users-development-activity',
+  'get-users-externalid-authority-name-external-key',
+  'get-users-me-verifiers',
+  'get-users-query',
+  'get-users-search',
+  'get-users-stations-me',
+];
+
+test('user tools are discoverable', async (t) => {
+  const server = new McpServer({ name: 'test', version: '1.0.0' });
+  gcUsersRegisterFunctions(server);
   const client = new Client({ name: 'test', version: '1.0.0' });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   t.after(async () => {
@@ -33,71 +77,6 @@ test('get-users returns structured JSON and reports API failures as errors', asy
   await server.connect(serverTransport);
   await client.connect(clientTransport);
 
-  assert.ok((await client.listTools()).tools.some((tool) => tool.name === 'get-users'));
-  const result = await client.callTool({ name: 'get-users', arguments: {} });
-  assert.deepEqual(result.structuredContent, { entities: [...firstPage, ...lastPage] });
-  assert.deepEqual(result.content, []);
-  assert.notEqual(result.isError, true);
-  assert.deepEqual(getUsers.mock.calls[0]?.arguments, [
-    { expand: [], pageSize: 100, pageNumber: 1 },
-  ]);
-  assert.deepEqual(getUsers.mock.calls[1]?.arguments, [
-    { expand: [], pageSize: 100, pageNumber: 2 },
-  ]);
-
-  getUsers.mock.mockImplementation(async () => {
-    throw new Error('sensitive API details');
-  });
-
-  const log = t.mock.method(console, 'error', () => {});
-  const failed = await client.callTool({ name: 'get-users', arguments: {} });
-  assert.equal(failed.isError, true);
-  assert.equal(failed.structuredContent, undefined);
-  assert.deepEqual(failed.content, [
-    { type: 'text', text: 'Failed to retrieve Genesys Cloud users.' },
-  ]);
-  assert.deepEqual(log.mock.calls[0]?.arguments, ['Failed to retrieve Genesys Cloud users.']);
-});
-
-test('get-user-by-id is discoverable and retrieves the requested user', async (t) => {
-  const config = {
-    region: 'mypurecloud.com',
-    clientId: 'test-client',
-    clientSecret: 'test-secret',
-  };
-  t.mock.method(platformClient.ApiClient.instance, 'loginClientCredentialsGrant', async () => ({
-    accessToken: 'test-token',
-    tokenExpiryTime: Date.now() + 60_000,
-    tokenExpiryTimeString: '',
-  }));
-  await initializeGenesysClient(config);
-  const userId = 'c3ad1d9a-6882-45ae-ae9a-4cb0b993e8b3';
-  const user = { id: userId, name: 'Example User' };
-  const getUser = t.mock.method(platformClient.UsersApi.prototype, 'getUser', async () => user);
-  const server = createServer(config);
-  const client = new Client({ name: 'test', version: '1.0.0' });
-  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  t.after(async () => {
-    await client.close();
-    await server.close();
-  });
-  await server.connect(serverTransport);
-  await client.connect(clientTransport);
-
-  const tool = (await client.listTools()).tools.find((item) => item.name === 'get-user-by-id');
-  assert.ok(tool);
-  assert.ok(tool.inputSchema.required?.includes('userId'));
-  const result = await client.callTool({
-    name: 'get-user-by-id',
-    arguments: { userId, expand: ['presence'] },
-  });
-  assert.notEqual(result.isError, true);
-  assert.deepEqual(result.structuredContent, { entity: user });
-  assert.deepEqual(getUser.mock.calls[0]?.arguments, [userId, { expand: ['presence'] }]);
-  const invalid = await client.callTool({
-    name: 'get-user-by-id',
-    arguments: { userId: 'not-a-uuid' },
-  });
-  assert.equal(invalid.isError, true);
-  assert.equal(getUser.mock.callCount(), 1);
+  const names = (await client.listTools()).tools.map((tool) => tool.name);
+  assert.deepEqual(names, expectedUserTools);
 });

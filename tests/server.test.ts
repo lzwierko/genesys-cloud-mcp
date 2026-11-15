@@ -15,6 +15,69 @@ const env = {
   GENESYSCLOUD_OAUTHCLIENT_SECRET: 'test-secret',
 };
 
+const expectedTools = [
+  'ping',
+  'verify_login',
+  'invalidate_login',
+  'get-users',
+  'get-user-by-id',
+  'get-user-me',
+  'get-user-state',
+  'get-analytics-users-aggregates-job',
+  'get-analytics-users-aggregates-job-results',
+  'get-analytics-users-details-job',
+  'get-analytics-users-details-job-results',
+  'get-analytics-users-details-jobs-availability',
+  'get-authorization-divisionspermitted-me',
+  'get-authorization-divisionspermitted-paged-me',
+  'get-authorization-divisionspermitted-paged-subject-id',
+  'get-authorization-subject',
+  'get-authorization-subjects-me',
+  'get-fieldconfig',
+  'get-profiles-users',
+  'get-routing-directroutingbackup-settings-me',
+  'get-routing-user-directroutingbackup-settings',
+  'get-routing-user-utilization',
+  'get-user-adjacents',
+  'get-user-callforwarding',
+  'get-user-customattribute',
+  'get-user-customattributes-bulk',
+  'get-user-directreports',
+  'get-user-externalid',
+  'get-user-externalid-authority-name',
+  'get-user-favorites',
+  'get-user-geolocation',
+  'get-user-outofoffice',
+  'get-user-profile',
+  'get-user-profileskills',
+  'get-user-queues',
+  'get-user-roles',
+  'get-user-routinglanguages',
+  'get-user-routingskills',
+  'get-user-routingstatus',
+  'get-user-skillgroups',
+  'get-user-station',
+  'get-user-superiors',
+  'get-user-trustors',
+  'get-user-verifiers',
+  'get-users-chats-me',
+  'get-users-customattributes-schema',
+  'get-users-customattributes-schema-version',
+  'get-users-customattributes-schema-versions',
+  'get-users-customattributes-schemas',
+  'get-users-customattributes-schemas-coretype',
+  'get-users-customattributes-schemas-coretypes',
+  'get-users-customattributes-schemas-limits',
+  'get-users-development-activities',
+  'get-users-development-activities-me',
+  'get-users-development-activity',
+  'get-users-externalid-authority-name-external-key',
+  'get-users-me-verifiers',
+  'get-users-query',
+  'get-users-search',
+  'get-users-stations-me',
+];
+
 test('configuration accepts env and CLI transport selection and SDK region keys', () => {
   assert.equal(readConfig(env, []).transport, 'stdio');
   const config = readConfig(
@@ -114,7 +177,7 @@ test('HTTP supports ping, verifies login, reports safe authentication errors and
   assert.equal(client.getServerVersion()?.name, 'genesys-cloud-mcp');
   assert.deepEqual(
     (await client.listTools()).tools.map((tool) => tool.name),
-    ['ping', 'verify_login', 'invalidate_login', 'get-users', 'get-user-by-id', 'get-user-me'],
+    expectedTools,
   );
   const result = await client.callTool({ name: 'ping', arguments: {} });
   assert.deepEqual(result.content, [{ type: 'text', text: 'pong' }]);
@@ -162,7 +225,7 @@ test('stdio supports MCP initialization, ping and login verification', async (t)
   assert.equal(client.getServerVersion()?.name, 'genesys-cloud-mcp');
   assert.deepEqual(
     (await client.listTools()).tools.map((tool) => tool.name),
-    ['ping', 'verify_login', 'invalidate_login', 'get-users', 'get-user-by-id', 'get-user-me'],
+    expectedTools,
   );
   const result = await client.callTool({ name: 'ping' });
   assert.deepEqual(result.content, [{ type: 'text', text: 'pong' }]);
