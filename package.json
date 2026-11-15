@@ -1,0 +1,33 @@
+{
+  "name": "genesys-cloud-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Genesys Cloud MCP server with stdio and Streamable HTTP transports",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "start": "node --env-file-if-exists=.env dist/index.js",
+    "start:stdio": "npm start -- --transport=stdio",
+    "start:http": "npm start -- --transport=http",
+    "dev": "node --env-file-if-exists=.env src/index.ts",
+    "test": "node --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "express": "^5.3.0",
+    "purecloud-platform-client-v2": "^265.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "prettier": "3.10.1",
+    "typescript": "^7.0.2"
+  }
+}
