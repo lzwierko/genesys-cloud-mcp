@@ -8,6 +8,7 @@ function registerFunctions(server: McpServer, genesysConfig: GenesysConfig) {
     {
       description: 'Verify Genesys Cloud login using the configured authentication method.',
       inputSchema: {},
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
     async () => {
       try {
@@ -40,7 +41,12 @@ function registerFunctions(server: McpServer, genesysConfig: GenesysConfig) {
       description:
         'Clear the local Genesys Cloud login and saved tokens for the configured region and OAuth client. Does not revoke remote tokens or sign out the browser.',
       inputSchema: {},
-      annotations: { destructiveHint: true, idempotentHint: true, openWorldHint: false },
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async () => {
       try {

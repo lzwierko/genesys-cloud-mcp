@@ -9,12 +9,12 @@ async function main(): Promise<void> {
   await initializeGenesysClient(config.genesys);
 
   if (config.transport === 'stdio') {
-    const server = createServer(config.genesys);
+    const server = createServer(config.genesys, config.toolAccess);
     await server.connect(new StdioServerTransport());
     return;
   }
 
-  const app = createHttpApp(config.host, config.genesys);
+  const app = createHttpApp(config.host, config.genesys, config.toolAccess);
   const listener = app.listen(config.port, config.host);
   listener.on('listening', () => {
     console.error(`MCP HTTP server listening at http://${config.host}:${config.port}/mcp`);

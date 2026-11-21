@@ -187,6 +187,121 @@ const expectedTools = [
   'get-externalcontacts-scan-organizations-divisionviews-all',
   'get-externalcontacts-scan-relationships',
   'get-externalcontacts-scan-relationships-divisionviews-all',
+  'get-analytics-conversation-details',
+  'get-analytics-conversations-aggregates-job',
+  'get-analytics-conversations-aggregates-job-results',
+  'get-analytics-conversations-details',
+  'get-analytics-conversations-details-job',
+  'get-analytics-conversations-details-job-results',
+  'get-analytics-conversations-details-jobs-availability',
+  'get-conversation',
+  'get-conversation-accessattributes',
+  'get-conversation-assistant-copilotcontext',
+  'get-conversation-communication-agentchecklist',
+  'get-conversation-communication-agentchecklist-job',
+  'get-conversation-communication-agentchecklists',
+  'get-conversation-communication-internalmessage',
+  'get-conversation-communication-internalmessages',
+  'get-conversation-customattribute',
+  'get-conversation-customattributes',
+  'get-conversation-participant-secureivrsession',
+  'get-conversation-participant-secureivrsessions',
+  'get-conversation-participant-wrapup',
+  'get-conversation-participant-wrapupcodes',
+  'get-conversation-secureattributes',
+  'get-conversation-suggestion',
+  'get-conversation-suggestions',
+  'get-conversation-summaries',
+  'get-conversations',
+  'get-conversations-call',
+  'get-conversations-call-participant-communication-wrapup',
+  'get-conversations-call-participant-wrapup',
+  'get-conversations-call-participant-wrapupcodes',
+  'get-conversations-callback',
+  'get-conversations-callback-participant-communication-wrapup',
+  'get-conversations-callback-participant-wrapup',
+  'get-conversations-callback-participant-wrapupcodes',
+  'get-conversations-callbacks',
+  'get-conversations-calls',
+  'get-conversations-calls-history',
+  'get-conversations-calls-maximumconferenceparties',
+  'get-conversations-cobrowsesession',
+  'get-conversations-cobrowsesession-participant-communication-wrapup',
+  'get-conversations-cobrowsesession-participant-wrapup',
+  'get-conversations-cobrowsesession-participant-wrapupcodes',
+  'get-conversations-cobrowsesessions',
+  'get-conversations-customattributes-schema',
+  'get-conversations-customattributes-schema-version',
+  'get-conversations-customattributes-schema-versions',
+  'get-conversations-customattributes-schemas',
+  'get-conversations-customattributes-schemas-coretype',
+  'get-conversations-customattributes-schemas-coretypes',
+  'get-conversations-customattributes-schemas-limits',
+  'get-conversations-email',
+  'get-conversations-email-message',
+  'get-conversations-email-messages',
+  'get-conversations-email-messages-draft',
+  'get-conversations-email-participant-communication-wrapup',
+  'get-conversations-email-participant-wrapup',
+  'get-conversations-email-participant-wrapupcodes',
+  'get-conversations-email-settings',
+  'get-conversations-emails',
+  'get-conversations-internalmessage',
+  'get-conversations-internalmessages',
+  'get-conversations-keyconfiguration',
+  'get-conversations-keyconfigurations',
+  'get-conversations-message',
+  'get-conversations-message-communication-messages-media',
+  'get-conversations-message-communication-messages-media-media-id',
+  'get-conversations-message-details',
+  'get-conversations-message-message',
+  'get-conversations-message-participant-communication-wrapup',
+  'get-conversations-message-participant-wrapup',
+  'get-conversations-message-participant-wrapupcodes',
+  'get-conversations-messages',
+  'get-conversations-messages-cachedmedia',
+  'get-conversations-messages-cachedmedia-cached-media-item-id',
+  'get-conversations-screenshare-participant-communication-wrapup',
+  'get-conversations-settings',
+  'get-conversations-social-participant-communication-wrapup',
+  'get-conversations-video-details',
+  'get-conversations-video-participant-communication-wrapup',
+  'get-conversations-videos-meeting',
+  'get-conversations-messaging-facebook-app',
+  'get-conversations-messaging-facebook-permissions',
+  'get-conversations-messaging-identityresolution-integrations-apple-integration-id',
+  'get-conversations-messaging-identityresolution-integrations-facebook-integration-id',
+  'get-conversations-messaging-identityresolution-integrations-instagram-integration-id',
+  'get-conversations-messaging-identityresolution-integrations-open-integration-id',
+  'get-conversations-messaging-identityresolution-integrations-twitter-integration-id',
+  'get-conversations-messaging-identityresolution-integrations-whatsapp-integration-id',
+  'get-conversations-messaging-integration-twitter-oauth-settings',
+  'get-conversations-messaging-integrations',
+  'get-conversations-messaging-integrations-apple',
+  'get-conversations-messaging-integrations-apple-integration-id',
+  'get-conversations-messaging-integrations-facebook',
+  'get-conversations-messaging-integrations-facebook-integration-id',
+  'get-conversations-messaging-integrations-instagram',
+  'get-conversations-messaging-integrations-instagram-integration-id',
+  'get-conversations-messaging-integrations-open',
+  'get-conversations-messaging-integrations-open-extensions-googlebusinessprofile-integration-id',
+  'get-conversations-messaging-integrations-open-extensions-googlebusinessprofile-oauth-settings',
+  'get-conversations-messaging-integrations-open-extensions-googlebusinessprofile-token',
+  'get-conversations-messaging-integrations-open-extensions-googlebusinessprofile-token-accounts',
+  'get-conversations-messaging-integrations-open-integration-id',
+  'get-conversations-messaging-integrations-twitter',
+  'get-conversations-messaging-integrations-twitter-integration-id',
+  'get-conversations-messaging-integrations-twitter-oauth-settings',
+  'get-conversations-messaging-integrations-whatsapp',
+  'get-conversations-messaging-integrations-whatsapp-integration-id',
+  'get-conversations-messaging-oauth-apple-callback',
+  'get-conversations-messaging-setting',
+  'get-conversations-messaging-settings',
+  'get-conversations-messaging-settings-default',
+  'get-conversations-messaging-supportedcontent',
+  'get-conversations-messaging-supportedcontent-default',
+  'get-conversations-messaging-supportedcontent-supported-content-id',
+  'get-conversations-messaging-threadingtimeline',
 ];
 
 test('configuration accepts env and CLI transport selection and SDK region keys', () => {
@@ -198,6 +313,16 @@ test('configuration accepts env and CLI transport selection and SDK region keys'
   assert.equal(config.transport, 'http');
   assert.equal(config.genesys.region, platformClient.PureCloudRegionHosts.eu_west_1);
   assert.equal(config.port, 4321);
+});
+
+test('configuration defaults to all tools and validates tool access modes', () => {
+  assert.equal(readConfig(env, []).toolAccess, 'all');
+  for (const mode of ['read', 'write', 'all']) {
+    assert.equal(readConfig({ ...env, MCP_TOOL_ACCESS: mode }, []).toolAccess, mode);
+  }
+  for (const mode of ['', 'readonly', 'READ', '${MCP_TOOL_ACCESS}']) {
+    assert.throws(() => readConfig({ ...env, MCP_TOOL_ACCESS: mode }, []), /MCP_TOOL_ACCESS/);
+  }
 });
 
 test('configuration rejects missing credentials, unresolved placeholders and invalid settings', () => {
@@ -347,3 +472,61 @@ test('stdio supports MCP initialization, ping and login verification', async (t)
   ]);
   assert.notEqual(verified.isError, true);
 });
+
+for (const mode of ['read', 'write', 'all'] as const) {
+  for (const transport of ['http', 'stdio'] as const) {
+    test(`${transport} keeps current tools available with ${mode} access`, async (t) => {
+      const client = new Client({ name: 'test', version: '1.0.0' });
+      if (transport === 'http') {
+        const config = readConfig({ ...env, MCP_TOOL_ACCESS: mode }, []);
+        const listener = createHttpApp('127.0.0.1', config.genesys, config.toolAccess).listen(
+          0,
+          '127.0.0.1',
+        );
+        t.after(
+          () =>
+            new Promise<void>((resolve, reject) => {
+              listener.close((error) => (error ? reject(error) : resolve()));
+              listener.closeAllConnections();
+            }),
+        );
+        await once(listener, 'listening');
+        const address = listener.address();
+        assert.ok(address && typeof address !== 'string');
+        t.after(() => client.close());
+        await client.connect(
+          new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${address.port}/mcp`)),
+        );
+      } else {
+        t.after(() => client.close());
+        await client.connect(
+          new StdioClientTransport({
+            command: process.execPath,
+            args: [
+              '--input-type=module',
+              '-e',
+              "import platformClient from 'purecloud-platform-client-v2'; " +
+                'platformClient.ApiClient.instance.loginClientCredentialsGrant = async () => ({}); ' +
+                "await import('./src/index.ts');",
+            ],
+            env: { ...env, MCP_TRANSPORT: 'stdio', MCP_TOOL_ACCESS: mode },
+            cwd: process.cwd(),
+            stderr: 'pipe',
+          }),
+        );
+      }
+
+      const loginTools = ['verify_login', 'invalidate_login'];
+      const tools = (await client.listTools()).tools;
+      assert.deepEqual(
+        tools.map((tool) => tool.name),
+        expectedTools,
+      );
+      for (const tool of tools) {
+        assert.equal(tool.annotations?.readOnlyHint, !loginTools.includes(tool.name));
+      }
+      const result = await client.callTool({ name: 'ping' });
+      assert.deepEqual(result.content, [{ type: 'text', text: 'pong' }]);
+    });
+  }
+}

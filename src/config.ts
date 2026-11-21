@@ -7,8 +7,11 @@ export interface GenesysConfig {
   redirectUri?: string;
 }
 
+export type ToolAccess = 'read' | 'write' | 'all';
+
 export interface Config {
   genesys: GenesysConfig;
+  toolAccess: ToolAccess;
   transport: 'stdio' | 'http';
   host: string;
   port: number;
@@ -33,6 +36,11 @@ export function readConfig(
   const transport = transportArg?.slice('--transport='.length) ?? env.MCP_TRANSPORT ?? 'stdio';
   if (transport !== 'stdio' && transport !== 'http') {
     throw new Error('MCP_TRANSPORT must be stdio or http.');
+  }
+
+  const toolAccess = env.MCP_TOOL_ACCESS ?? 'all';
+  if (toolAccess !== 'read' && toolAccess !== 'write' && toolAccess !== 'all') {
+    throw new Error('MCP_TOOL_ACCESS must be read, write or all.');
   }
 
   const regionValue = required(env, 'GENESYSCLOUD_REGION');
@@ -88,6 +96,7 @@ export function readConfig(
       clientSecret,
       redirectUri,
     },
+    toolAccess,
     transport,
     host,
     port,

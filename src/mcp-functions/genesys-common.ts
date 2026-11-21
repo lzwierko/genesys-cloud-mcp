@@ -121,6 +121,12 @@ export function registerApiGetTool<Api, S extends z.ZodType>(
       title,
       description: `${summary} Returns the SDK response as structured JSON. ${requirements}`.trim(),
       inputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true,
+      },
     },
     // Keep the concrete Zod input type above; the MCP callback generic is conditional and loses it here.
     handler as ToolCallback<S>,

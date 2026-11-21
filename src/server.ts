@@ -1,5 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { GenesysConfig } from './config.ts';
+import type { GenesysConfig, ToolAccess } from './config.ts';
 import { initializeGenesysClient } from './genesys.ts';
 import { gcUsersRegisterFunctions } from './mcp-functions/users.ts';
 import { gcLoginRegisterFunctions } from './mcp-functions/login.ts';
@@ -9,8 +9,12 @@ import { gcObjectsRegisterFunctions } from './mcp-functions/objects.ts';
 import { gcLicenseRegisterFunctions } from './mcp-functions/license.ts';
 import { gcGroupsRegisterFunctions } from './mcp-functions/groups.ts';
 import { gcExternalContactsRegisterFunctions } from './mcp-functions/external-contacts.ts';
+import { gcConversationsRegisterFunctions } from './mcp-functions/conversations.ts';
 
-export function createServer(genesysConfig: GenesysConfig): McpServer {
+export function createServer(
+  genesysConfig: GenesysConfig,
+  toolAccess: ToolAccess = 'all',
+): McpServer {
   const server = new McpServer(
     { name: 'genesys-cloud-mcp', version: '0.1.0' },
     { capabilities: { tools: {} } },
@@ -21,6 +25,12 @@ export function createServer(genesysConfig: GenesysConfig): McpServer {
     {
       description: 'Check MCP server connectivity. Returns pong without calling Genesys Cloud.',
       inputSchema: {},
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
     },
     async () => ({
       content: [{ type: 'text', text: 'pong' }],
@@ -35,5 +45,6 @@ export function createServer(genesysConfig: GenesysConfig): McpServer {
   gcLicenseRegisterFunctions(server);
   gcGroupsRegisterFunctions(server);
   gcExternalContactsRegisterFunctions(server);
+  gcConversationsRegisterFunctions(server);
   return server;
 }

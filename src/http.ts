@@ -1,13 +1,17 @@
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createServer } from './server.ts';
-import type { GenesysConfig } from './config.ts';
+import type { GenesysConfig, ToolAccess } from './config.ts';
 
-export function createHttpApp(host: string, genesysConfig: GenesysConfig) {
+export function createHttpApp(
+  host: string,
+  genesysConfig: GenesysConfig,
+  toolAccess: ToolAccess = 'all',
+) {
   const app = createMcpExpressApp({ host });
 
   app.post('/mcp', async (req, res) => {
-    const server = createServer(genesysConfig);
+    const server = createServer(genesysConfig, toolAccess);
     const transport = new StreamableHTTPServerTransport({
       enableJsonResponse: true,
     });
