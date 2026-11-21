@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { readConfig } from './config.ts';
 import { initializeGenesysClient } from './genesys.ts';

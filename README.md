@@ -6,6 +6,21 @@ This project implements MCP server for communication with Genesys Cloud CC.
 
 This project is licensed under the [MIT License](LICENSE).
 
+## Install from npm
+
+Requires Node.js 22.18 or newer. Install the published package globally to use
+the `genesys-cloud-mcp` command:
+
+```powershell
+npm install --global genesys-cloud-mcp
+genesys-cloud-mcp
+```
+
+Set the required `GENESYSCLOUD_REGION` and `GENESYSCLOUD_OAUTHCLIENT_ID`
+environment variables, plus `GENESYSCLOUD_OAUTHCLIENT_SECRET` for Client
+Credentials authentication. See the [configuration](#setup) section for browser
+authentication and all supported settings.
+
 ## Setup
 
 Requires Node.js 22.18 or newer.
@@ -78,8 +93,26 @@ and TLS before exposing it to a network.
 
 ## MCP client configuration
 
-For stdio clients, invoke Node directly (not npm, whose output can interfere
-with the protocol). Replace the path with your checkout's absolute path:
+For an npm installation, use the installed command (not `npm`, whose output can
+interfere with the protocol):
+
+```json
+{
+  "mcpServers": {
+    "genesys-cloud": {
+      "command": "genesys-cloud-mcp",
+      "env": {
+        "GENESYSCLOUD_REGION": "${GENESYSCLOUD_REGION}",
+        "GENESYSCLOUD_OAUTHCLIENT_ID": "${GENESYSCLOUD_OAUTHCLIENT_ID}",
+        "GENESYSCLOUD_OAUTHCLIENT_SECRET": "${GENESYSCLOUD_OAUTHCLIENT_SECRET}"
+      }
+    }
+  }
+}
+```
+
+For a local checkout, invoke Node directly and replace the path with your
+checkout's absolute path:
 
 ```json
 {
@@ -182,6 +215,31 @@ dependencies, the lockfile, and environment files are excluded.
 
 Tests mock OAuth, the credential store, and browser launch, and exercise both MCP
 transports locally; they do not require real credentials or contact Genesys Cloud.
+
+## Packaging and publishing
+
+Before creating a release, update the version in `package.json` and verify the
+contents of the npm package:
+
+```sh
+npm pack --dry-run
+```
+
+The `prepack` script builds the project, and the `files` field in `package.json`
+limits what is included. To create a local tarball for installation testing:
+
+```sh
+npm pack
+```
+
+To publish, authenticate with npm using `npm login`, then run:
+
+```sh
+npm publish
+```
+
+Publishing also runs the `prepack` build. Each version can only be published
+once, so choose a new version for every release.
 
 ## Running locally
 

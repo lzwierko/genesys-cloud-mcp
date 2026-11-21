@@ -1,14 +1,40 @@
 {
   "name": "genesys-cloud-mcp",
   "version": "0.1.0",
-  "private": true,
+  "license": "MIT",
   "description": "Genesys Cloud MCP server with stdio and Streamable HTTP transports",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lzwierko/genesys-cloud-mcp.git"
+  },
+  "homepage": "https://github.com/lzwierko/genesys-cloud-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/lzwierko/genesys-cloud-mcp/issues"
+  },
+  "keywords": [
+    "genesys-cloud",
+    "mcp",
+    "model-context-protocol",
+    "genesys",
+    "server"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "AGENTS.md",
+    ".env.example"
+  ],
+  "bin": {
+    "genesys-cloud-mcp": "./dist/index.js"
+  },
   "engines": {
     "node": ">=22.18.0"
   },
   "scripts": {
     "build": "tsc",
+    "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
