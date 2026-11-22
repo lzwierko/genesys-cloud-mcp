@@ -296,6 +296,8 @@ sign-in when the extension is installed. Disable **Remember browser sign-in**
 to keep browser tokens in memory only. The optional client secret is stored as
 a sensitive setting; leave it blank to use browser sign-in with Authorization
 Code and PKCE.
+When the optional client secret is blank, the server also accepts Claude
+Desktop's unresolved `${user_config.oauth_client_secret}` placeholder as empty.
 
 Attach the matching `.mcpb` file to the GitHub release. Users can open the
 downloaded file in Claude Desktop to install it. Bundles are unsigned; sign

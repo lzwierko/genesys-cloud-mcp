@@ -108,7 +108,7 @@ test('stdio starts and verifies login using a cached browser token', async (t) =
       env: {
         GENESYSCLOUD_REGION: config.region,
         GENESYSCLOUD_OAUTHCLIENT_ID: config.clientId,
-        GENESYSCLOUD_OAUTHCLIENT_SECRET: '',
+        GENESYSCLOUD_OAUTHCLIENT_SECRET: '${user_config.oauth_client_secret}',
         GENESYSCLOUD_PERSIST_TOKENS: 'true',
         MCP_TRANSPORT: 'stdio',
       },

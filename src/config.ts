@@ -62,7 +62,9 @@ export function readConfig(
     throw new Error('MCP_HOST must not be empty.');
   }
 
-  const clientSecret = env.GENESYSCLOUD_OAUTHCLIENT_SECRET?.trim() ?? '';
+  const secretValue = env.GENESYSCLOUD_OAUTHCLIENT_SECRET?.trim() ?? '';
+  // Claude Desktop leaves this optional MCPB placeholder unresolved when the secret is blank.
+  const clientSecret = secretValue === '${user_config.oauth_client_secret}' ? '' : secretValue;
   if (/^\$\{.*\}$/.test(clientSecret)) {
     throw new Error('GENESYSCLOUD_OAUTHCLIENT_SECRET contains an unresolved placeholder.');
   }

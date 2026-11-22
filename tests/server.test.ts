@@ -351,6 +351,13 @@ test('configuration rejects missing credentials, unresolved placeholders and inv
     readConfig({ ...env, GENESYSCLOUD_OAUTHCLIENT_SECRET: undefined }, []).genesys.clientSecret,
     '',
   );
+  assert.equal(
+    readConfig(
+      { ...env, GENESYSCLOUD_OAUTHCLIENT_SECRET: '${user_config.oauth_client_secret}' },
+      [],
+    ).genesys.clientSecret,
+    '',
+  );
   for (const redirect of [
     'https://localhost:6798/',
     'http://example.com:6798/',
