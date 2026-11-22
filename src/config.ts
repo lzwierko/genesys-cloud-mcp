@@ -4,6 +4,7 @@ export interface GenesysConfig {
   region: string;
   clientId: string;
   clientSecret: string;
+  persistTokens: boolean;
   redirectUri?: string;
 }
 
@@ -65,6 +66,10 @@ export function readConfig(
   if (/^\$\{.*\}$/.test(clientSecret)) {
     throw new Error('GENESYSCLOUD_OAUTHCLIENT_SECRET contains an unresolved placeholder.');
   }
+  const persistTokensValue = env.GENESYSCLOUD_PERSIST_TOKENS?.trim() ?? 'false';
+  if (persistTokensValue !== 'true' && persistTokensValue !== 'false') {
+    throw new Error('GENESYSCLOUD_PERSIST_TOKENS must be true or false.');
+  }
   const redirectUri = env.GENESYSCLOUD_REDIRECT_URI?.trim() || 'http://localhost:6798/';
   if (!clientSecret) {
     let uri: URL;
@@ -94,6 +99,7 @@ export function readConfig(
       region,
       clientId: required(env, 'GENESYSCLOUD_OAUTHCLIENT_ID'),
       clientSecret,
+      persistTokens: persistTokensValue === 'true',
       redirectUri,
     },
     toolAccess,

@@ -26,22 +26,41 @@ interface TokenStore {
 }
 
 export interface BrowserAuthDependencies {
-  store: TokenStore;
+  store?: TokenStore;
   fetch: typeof fetch;
   authorize: (config: GenesysConfig, verifier: string) => Promise<string>;
   now: () => number;
 }
 
-function credentialStore(config: GenesysConfig): AsyncEntry {
-  const account = createHash('sha256')
+const inMemoryCredentials = new Map<string, string>();
+
+function credentialAccount(config: GenesysConfig): string {
+  return createHash('sha256')
     .update(JSON.stringify([config.region, config.clientId]))
     .digest('hex');
-  return new AsyncEntry('genesys-cloud-mcp', account, {
+}
+
+function credentialStore(config: GenesysConfig): AsyncEntry {
+  return new AsyncEntry('genesys-cloud-mcp', credentialAccount(config), {
     linux: { store: 'secret-service' },
   });
 }
 
+function memoryCredentialStore(config: GenesysConfig): TokenStore {
+  const account = credentialAccount(config);
+  return {
+    async getPassword() {
+      return inMemoryCredentials.get(account) ?? null;
+    },
+    async setPassword(value) {
+      inMemoryCredentials.set(account, value);
+    },
+  };
+}
+
 export async function clearBrowserCredentials(config: GenesysConfig): Promise<void> {
+  const account = credentialAccount(config);
+  inMemoryCredentials.delete(account);
   try {
     await credentialStore(config).deleteCredential();
   } catch {
@@ -179,11 +198,14 @@ export async function authenticateBrowser(
   config: GenesysConfig,
   dependencies?: BrowserAuthDependencies,
 ): Promise<Token> {
-  const deps = dependencies ?? {
-    store: credentialStore(config),
-    fetch,
-    authorize: requestAuthorizationCode,
-    now: Date.now,
+  const store =
+    dependencies?.store ??
+    (config.persistTokens ? credentialStore(config) : memoryCredentialStore(config));
+  const deps = {
+    store,
+    fetch: dependencies?.fetch ?? fetch,
+    authorize: dependencies?.authorize ?? requestAuthorizationCode,
+    now: dependencies?.now ?? Date.now,
   };
   const saved = await deps.store.getPassword();
   let token: Token | undefined;

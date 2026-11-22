@@ -39,6 +39,7 @@ Set these variables in `.env` or the process environment:
 | `GENESYSCLOUD_OAUTHCLIENT_ID`     | OAuth client ID.                                                                                        |
 | `GENESYSCLOUD_OAUTHCLIENT_SECRET` | OAuth client secret; leave empty or unset for browser sign-in.                                          |
 | `GENESYSCLOUD_REDIRECT_URI`       | Browser login callback; defaults to `http://localhost:6798/`.                                           |
+| `GENESYSCLOUD_PERSIST_TOKENS`     | Set to `true` to keep browser tokens in the OS credential store; defaults to `false`.                 |
 
 With a secret, use a Genesys Cloud OAuth client configured for **Client Credentials**
 with the roles needed by the APIs you intend to expose.
@@ -58,6 +59,16 @@ Expired tokens are refreshed before subsequent Genesys tool calls. Remove the
 corresponding credential from your OS credential manager to sign out locally.
 Anyone with access to your user account or credential store may be able to use
 the cached credentials.
+
+Set `GENESYSCLOUD_PERSIST_TOKENS=false` to opt out of saving browser access and
+refresh tokens. They remain in process memory for the current server run, so
+browser sign-in is required again the next time the server starts. This setting
+does not affect Client Credentials authentication. The server does not save the
+OAuth client secret: for MCPB installs Claude Desktop stores the sensitive
+secret setting in its OS credential store; other MCP clients manage their
+configured environment variables themselves. If you already have saved browser
+tokens, use `invalidate_login` or remove them from the OS credential store 
+(it does not remove it from browser cache though).
 
 Both authentication methods work with stdio and HTTP. Authentication happens
 before either transport starts; failure stops startup. Tokens and secrets are
@@ -92,6 +103,55 @@ HTTP has no client authentication: keep it on loopback, or add authentication
 and TLS before exposing it to a network.
 
 ## MCP client configuration
+
+The server uses the standard MCP protocol and works with Claude Desktop and
+Claude Code over stdio. Install the package globally first:
+
+```powershell
+npm install --global genesys-cloud-mcp
+```
+
+### Claude Desktop
+
+In Claude Desktop, open **Settings > Developer > Edit Config** and add the
+following to `claude_desktop_config.json`. Replace the region and client ID
+with your Genesys Cloud settings. This example omits the OAuth client secret
+and uses browser sign-in (Authorization Code with PKCE); see [Setup](#setup)
+for the required redirect URI and authentication details.
+
+```json
+{
+  "mcpServers": {
+    "genesys-cloud": {
+      "command": "cmd",
+      "args": ["/c", "genesys-cloud-mcp"],
+      "env": {
+        "GENESYSCLOUD_REGION": "mypurecloud.com",
+        "GENESYSCLOUD_OAUTHCLIENT_ID": "YOUR_CLIENT_ID"
+      }
+    }
+  }
+}
+```
+
+Save the file and restart Claude Desktop. On startup, the server opens your
+browser for Genesys Cloud sign-in.
+
+### Claude Code
+
+Run this in PowerShell after installing the package globally. Replace the
+region and client ID with your Genesys Cloud settings:
+
+```powershell
+claude mcp add --scope user `
+  --env GENESYSCLOUD_REGION=mypurecloud.com GENESYSCLOUD_OAUTHCLIENT_ID=YOUR_CLIENT_ID `
+  --transport stdio `
+  genesys-cloud -- cmd /c genesys-cloud-mcp
+```
+
+This configures browser sign-in (Authorization Code with PKCE). Start or
+restart Claude Code; the server will open your browser for Genesys Cloud
+sign-in. Use `claude mcp get genesys-cloud` to check the configuration.
 
 For an npm installation, use the installed command (not `npm`, whose output can
 interfere with the protocol):
@@ -218,28 +278,38 @@ transports locally; they do not require real credentials or contact Genesys Clou
 
 ## Packaging and publishing
 
-Before creating a release, update the version in `package.json` and verify the
-contents of the npm package:
+Update the version in `package.json` for each release. Create one universal
+MCPB for Windows and macOS with:
 
-```sh
+```powershell
+npm install
+npm run pack:mcpb
+```
+
+The bundle is written to `release/genesys-cloud-mcp-<version>.mcpb`. It includes
+the native keyring modules for Windows x64/ARM64 and macOS x64/ARM64.
+
+The pack command installs production dependencies for each supported target,
+validates the MCPB manifest, and bundles the built server. Claude Desktop asks
+for the Genesys Cloud region, OAuth client ID, and whether to remember browser
+sign-in when the extension is installed. Disable **Remember browser sign-in**
+to keep browser tokens in memory only. The optional client secret is stored as
+a sensitive setting; leave it blank to use browser sign-in with Authorization
+Code and PKCE.
+
+Attach the matching `.mcpb` file to the GitHub release. Users can open the
+downloaded file in Claude Desktop to install it. Bundles are unsigned; sign
+them with a trusted code-signing certificate if your distribution requires it.
+To publish the npm package as well, verify its contents and publish separately:
+
+```powershell
 npm pack --dry-run
-```
-
-The `prepack` script builds the project, and the `files` field in `package.json`
-limits what is included. To create a local tarball for installation testing:
-
-```sh
-npm pack
-```
-
-To publish, authenticate with npm using `npm login`, then run:
-
-```sh
 npm publish
 ```
 
-Publishing also runs the `prepack` build. Each version can only be published
-once, so choose a new version for every release.
+The npm `prepack` script builds the project, and the `files` field in
+`package.json` limits the npm package contents. Each npm version can only be
+published once, so choose a new version for every release.
 
 ## Running locally
 

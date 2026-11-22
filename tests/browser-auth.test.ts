@@ -3,13 +3,19 @@ import { createHash } from 'node:crypto';
 import { once } from 'node:events';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
-import { authenticateBrowser, requestAuthorizationCode } from '../src/browser-auth.ts';
+import { AsyncEntry } from '@napi-rs/keyring';
+import {
+  authenticateBrowser,
+  clearBrowserCredentials,
+  requestAuthorizationCode,
+} from '../src/browser-auth.ts';
 import type { BrowserAuthDependencies } from '../src/browser-auth.ts';
 
 const config = {
   region: 'mypurecloud.com',
   clientId: 'test-client',
   clientSecret: '',
+  persistTokens: true,
   redirectUri: 'http://localhost:6798/',
 };
 const now = 1_000_000;
@@ -71,6 +77,42 @@ test('browser authentication exchanges a PKCE code and stores the token', async 
   assert.equal(body.get('redirect_uri'), config.redirectUri);
   assert.ok(body.get('code_verifier'));
   assert.equal(mock.authorizations(), 1);
+});
+
+test('browser tokens can remain in memory without persistent credential storage', async (t) => {
+  const noPersistenceConfig = {
+    ...config,
+    clientId: 'memory-only-client',
+    persistTokens: false,
+  };
+  const mock = setup();
+  const getPassword = t.mock.method(AsyncEntry.prototype, 'getPassword');
+  const setPassword = t.mock.method(AsyncEntry.prototype, 'setPassword');
+  const deleteCredential = t.mock.method(
+    AsyncEntry.prototype,
+    'deleteCredential',
+    async () => true,
+  );
+  const dependencies: BrowserAuthDependencies = {
+    fetch: mock.deps.fetch,
+    authorize: mock.deps.authorize,
+    now: mock.deps.now,
+  };
+
+  await clearBrowserCredentials(noPersistenceConfig);
+  const first = await authenticateBrowser(noPersistenceConfig, dependencies);
+  const second = await authenticateBrowser(noPersistenceConfig, dependencies);
+
+  assert.deepEqual(second, first);
+  assert.equal(mock.authorizations(), 1);
+  assert.equal(getPassword.mock.callCount(), 0);
+  assert.equal(setPassword.mock.callCount(), 0);
+  assert.equal(deleteCredential.mock.callCount(), 1);
+
+  await clearBrowserCredentials(noPersistenceConfig);
+  await authenticateBrowser(noPersistenceConfig, dependencies);
+  assert.equal(mock.authorizations(), 2);
+  assert.equal(deleteCredential.mock.callCount(), 2);
 });
 
 test('cached tokens are validated and reused, expired tokens are refreshed', async () => {

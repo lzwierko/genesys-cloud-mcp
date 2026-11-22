@@ -1,0 +1,69 @@
+{
+  "manifest_version": "0.3",
+  "name": "genesys-cloud-mcp",
+  "display_name": "Genesys Cloud",
+  "version": "0.1.0",
+  "description": "Read-only Genesys Cloud API tools for Claude Desktop.",
+  "author": {
+    "name": "lzwierko",
+    "url": "https://github.com/lzwierko"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lzwierko/genesys-cloud-mcp.git"
+  },
+  "homepage": "https://github.com/lzwierko/genesys-cloud-mcp",
+  "support": "https://github.com/lzwierko/genesys-cloud-mcp/issues",
+  "license": "MIT",
+  "privacy_policies": ["https://www.genesys.com/company/legal/privacy-policy"],
+  "keywords": ["genesys-cloud", "mcp", "claude", "contact-center"],
+  "tools_generated": true,
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js"],
+      "env": {
+        "GENESYSCLOUD_REGION": "${user_config.genesyscloud_region}",
+        "GENESYSCLOUD_OAUTHCLIENT_ID": "${user_config.oauth_client_id}",
+        "GENESYSCLOUD_OAUTHCLIENT_SECRET": "${user_config.oauth_client_secret}",
+        "GENESYSCLOUD_PERSIST_TOKENS": "${user_config.persist_tokens}"
+      }
+    }
+  },
+  "user_config": {
+    "genesyscloud_region": {
+      "type": "string",
+      "title": "Genesys Cloud region",
+      "description": "Your Genesys Cloud hostname (for example, mypurecloud.com) or SDK region key.",
+      "required": true
+    },
+    "oauth_client_id": {
+      "type": "string",
+      "title": "OAuth client ID",
+      "description": "The client ID of your Genesys Cloud OAuth client.",
+      "required": true
+    },
+    "oauth_client_secret": {
+      "type": "string",
+      "title": "OAuth client secret",
+      "description": "Optional. Leave blank to sign in through the browser using Authorization Code with PKCE.",
+      "sensitive": true,
+      "required": false
+    },
+    "persist_tokens": {
+      "type": "boolean",
+      "title": "Remember browser sign-in",
+      "description": "Save browser access and refresh tokens in the OS credential store. Disable to keep them in memory only.",
+      "default": false
+    }
+  },
+  "compatibility": {
+    "claude_desktop": ">=1.0.0",
+    "platforms": ["darwin", "win32"],
+    "runtimes": {
+      "node": ">=22.18.0"
+    }
+  }
+}

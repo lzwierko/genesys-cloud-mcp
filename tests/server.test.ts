@@ -325,6 +325,18 @@ test('configuration defaults to all tools and validates tool access modes', () =
   }
 });
 
+test('configuration disables token persistence by default and supports opting in', () => {
+  assert.equal(readConfig(env, []).genesys.persistTokens, false);
+  assert.equal(
+    readConfig({ ...env, GENESYSCLOUD_PERSIST_TOKENS: 'true' }, []).genesys.persistTokens,
+    true,
+  );
+  assert.throws(
+    () => readConfig({ ...env, GENESYSCLOUD_PERSIST_TOKENS: 'no' }, []),
+    /GENESYSCLOUD_PERSIST_TOKENS/,
+  );
+});
+
 test('configuration rejects missing credentials, unresolved placeholders and invalid settings', () => {
   for (const key of ['GENESYSCLOUD_REGION', 'GENESYSCLOUD_OAUTHCLIENT_ID']) {
     assert.throws(() => readConfig({ ...env, [key]: '' }, []), new RegExp(key));

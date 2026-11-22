@@ -13,6 +13,7 @@ const config = {
   region: 'mypurecloud.com',
   clientId: 'test-client',
   clientSecret: '',
+  persistTokens: true,
   redirectUri: 'http://localhost:6798/',
 };
 const cached = JSON.stringify({
@@ -108,6 +109,7 @@ test('stdio starts and verifies login using a cached browser token', async (t) =
         GENESYSCLOUD_REGION: config.region,
         GENESYSCLOUD_OAUTHCLIENT_ID: config.clientId,
         GENESYSCLOUD_OAUTHCLIENT_SECRET: '',
+        GENESYSCLOUD_PERSIST_TOKENS: 'true',
         MCP_TRANSPORT: 'stdio',
       },
       cwd: process.cwd(),
